@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "FED-GRAM",
+  "version": "1.0.0",
+  "description": "Download images from public Instagram posts. Paste a post URL, preview the image(s), and save them to your device.",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://www.instagram.com/*",
+    "https://instagram.com/*",
+    "https://*.cdninstagram.com/*",
+    "https://*.fbcdn.net/*"
+  ],
+  "action": {
+    "default_title": "FED-GRAM — Instagram image downloader",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

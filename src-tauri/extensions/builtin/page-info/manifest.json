@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Surf FED Page Info",
+  "version": "1.0.0",
+  "description": "Built-in page info extension. Shows the title, URL, description and link count of the active page.",
+  "icons": {
+    "48": "icon.png"
+  },
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_title": "Page Info",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

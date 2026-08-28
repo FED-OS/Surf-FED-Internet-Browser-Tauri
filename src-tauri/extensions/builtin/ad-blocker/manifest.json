@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Surf FED Ad Blocker",
+  "version": "1.0.1",
+  "description": "Built-in ad blocker for Surf FED. Blocks common ad and tracking domains using declarativeNetRequest rules.",
+  "icons": {
+    "48": "icon.png"
+  },
+  "permissions": ["declarativeNetRequest"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_ads",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "action": {
+    "default_title": "Ad Blocker"
+  }
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>FED-GRAM</title>
+  <link rel="stylesheet" href="popup.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+  <header>
+    <div class="brand">🖼️ FED-GRAM</div>
+    <div class="tagline">Download images from public Instagram posts</div>
+  </header>
+  <hr>
+
+  <div class="field">
+    <label for="url">Instagram post URL</label>
+    <input id="url" type="text" placeholder="https://www.instagram.com/p/XXXXXXXXXXX/" autocomplete="off">
+  </div>
+
+  <button id="extractBtn" class="primary" disabled>Extract Image</button>
+  <button id="useCurrentTabBtn" class="secondary" title="Use the URL of the active tab">Use current tab</button>
+
+  <div id="status" class="status" hidden></div>
+  <div id="results" class="results"></div>
+
+  <hr>
+  <footer>⚠️ Only works on public posts. For personal use only.</footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

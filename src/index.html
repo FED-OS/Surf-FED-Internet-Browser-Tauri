@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surf FED</title>
+  <link rel="stylesheet" href="./styles.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+  <!-- Custom title bar for the frameless window -->
+  <div id="titlebar">
+    <div class="title" id="titlebarTitle">Surf FED</div>
+    <div id="titlebar-buttons">
+      <button id="minBtn" title="Minimize">&#8211;</button>
+      <button id="maxBtn" title="Maximize">&#9633;</button>
+      <button id="closeBtn" class="close" title="Close">&#10005;</button>
+    </div>
+  </div>
+
+  <!-- Browser toolbar -->
+  <div id="toolbar">
+    <button id="backBtn" title="Back">&#9664;</button>
+    <button id="forwardBtn" title="Forward">&#9654;</button>
+    <button id="reloadBtn" title="Reload">&#10227;</button>
+    <input id="urlBar" type="text" placeholder="Enter URL or search...">
+    <button id="newTabBtn" title="New tab">+</button>
+    <button id="darkModeBtn" title="Toggle dark mode">&#127769;</button>
+    <button id="pageInfoBtn" title="Page info">&#8505;</button>
+    <button id="fedgramBtn" title="FED-GRAM (Instagram downloader)">&#128247;</button>
+    <button id="extensionsBtn" title="Extensions">&#129513;</button>
+  </div>
+
+  <div id="tabsContainer"></div>
+  <div id="webviewContainer"></div>
+
+  <!-- Extensions Manager Panel -->
+  <div id="extensionsPanel" class="hidden">
+    <div class="ext-panel-header">
+      <h2>Extensions</h2>
+      <button id="extCloseBtn" class="ext-close" title="Close">&#10005;</button>
+    </div>
+    <div class="ext-panel-actions">
+      <button id="extAddBtn">&#65291; Load unpacked extension&#8230;</button>
+      <button id="extOpenFolderBtn">&#128194; Open extensions folder</button>
+      <button id="extReloadBtn">&#10227; Reload list</button>
+    </div>
+    <div id="extList"></div>
+    <p class="ext-hint">
+      Tip: drop an unpacked extension folder into your extensions folder, then click
+      &#8220;Reload list&#8221;. Or use &#8220;Load unpacked extension&#8230;&#8221; to pick it with a dialog.
+      Built-in extensions are implemented natively in Rust for performance.
+    </p>
+  </div>
+
+  <!-- Page Info popup -->
+  <div id="pageInfoOverlay" class="popup-overlay">
+    <div class="popup-card" id="pageInfoCard">
+      <button class="pi-close" id="pageInfoClose">&#10005;</button>
+      <h2>Page Info</h2>
+      <div id="pageInfoContent"><p class="ext-loading">Loading&#8230;</p></div>
+    </div>
+  </div>
+
+  <!-- FED-GRAM popup -->
+  <div id="fedgramOverlay" class="popup-overlay">
+    <div class="popup-card fedgram-card">
+      <button class="pi-close" id="fedgramClose">&#10005;</button>
+      <h2>FED-GRAM &#8212; Instagram Image Downloader</h2>
+      <div class="fedgram-input-row">
+        <input id="fedgramUrl" type="text" placeholder="Paste a public Instagram post URL (https://instagram.com/p/...)">
+        <button id="fedgramExtractBtn">Extract</button>
+      </div>
+      <div class="fedgram-status" id="fedgramStatus"></div>
+      <div class="fedgram-images" id="fedgramImages"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+/* Surf FED — Tauri edition
+   Ported from the original Electron styles.css, with additions for the
+   custom frameless title bar and the iframe-based webview container.     */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-toolbar: #2d2d2d;
+  --bg-toolbar-btn: #3d3d3d;
+  --bg-toolbar-btn-hover: #5d5d5d;
+  --bg-urlbar: #4d4d4d;
+  --bg-urlbar-focus: #5d5d5d;
+  --bg-tabs: #252525;
+  --bg-tab: #333;
+  --bg-tab-active: #444;
+  --text-light: #ccc;
+  --text-active: #fff;
+}
+
+html, body {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: #f0f0f0;
+  color: #fff;
+}
+
+/* ---------- Custom title bar (frameless window) ---------- */
+#titlebar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background: #1e1e1e;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+#titlebar .title {
+  flex: 1;
+  font-size: 12px;
+  color: #999;
+  padding-left: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#titlebar-buttons {
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+#titlebar-buttons button {
+  width: 46px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #ccc;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#titlebar-buttons button:hover { background: #333; }
+#titlebar-buttons button.close:hover { background: #e81123; color: #fff; }
+
+/* ---------- Toolbar ---------- */
+#toolbar {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 4px;
+  background: var(--bg-toolbar);
+  flex-shrink: 0;
+}
+#toolbar button {
+  background: var(--bg-toolbar-btn);
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#toolbar button:hover { background: var(--bg-toolbar-btn-hover); }
+#urlBar {
+  flex: 1;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  background: var(--bg-urlbar);
+  color: white;
+  outline: none;
+}
+#urlBar:focus { background: var(--bg-urlbar-focus); }
+#urlBar::placeholder { color: #aaa; }
+
+/* ---------- Tabs ---------- */
+#tabsContainer {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px 0 8px;
+  gap: 4px;
+  background: var(--bg-tabs);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+#tabsContainer::-webkit-scrollbar { height: 4px; }
+#tabsContainer::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
+.tab {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  font-size: 13px;
+  background: var(--bg-tab);
+  color: var(--text-light);
+  flex-shrink: 0;
+}
+.tab.active { background: var(--bg-tab-active); color: var(--text-active); font-weight: 600; }
+.tab span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab .close-tab {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+.tab .close-tab:hover { color: #fff; }
+
+/* ---------- Webview (iframe) container ---------- */
+#webviewContainer {
+  flex: 1;
+  position: relative;
+  background: #fff;
+  overflow: hidden;
+}
+.browse-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+  background: #fff;
+}
+.browse-frame.active { display: block; }
+
+/* Fallback shown when a site blocks iframe embedding (X-Frame-Options / CSP) */
+.frame-fallback {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 40px;
+  background: #f7f7f7;
+  color: #333;
+  gap: 12px;
+}
+.frame-fallback.active { display: flex; }
+.frame-fallback h3 { font-size: 18px; }
+.frame-fallback p { font-size: 14px; color: #666; max-width: 420px; line-height: 1.5; }
+.frame-fallback a {
+  color: #1a73e8;
+  font-size: 15px;
+  text-decoration: none;
+  padding: 8px 20px;
+  border: 1px solid #1a73e8;
+  border-radius: 6px;
+}
+.frame-fallback a:hover { background: #e8f0fe; }
+
+/* ---------- Dark mode (browser UI only) ---------- */
+body.dark-mode { background: #121212; }
+body.dark-mode #titlebar { background: #111; }
+body.dark-mode #titlebar .title { color: #777; }
+body.dark-mode #toolbar { background: #1a1a1a; }
+body.dark-mode #toolbar button { background: #2a2a2a; color: #eee; }
+body.dark-mode #toolbar button:hover { background: #3a3a3a; }
+body.dark-mode #urlBar { background: #2a2a2a; color: #eee; }
+body.dark-mode #urlBar:focus { background: #333; }
+body.dark-mode #tabsContainer { background: #161616; }
+body.dark-mode .tab { background: #1e1e1e; color: #999; }
+body.dark-mode .tab.active { background: #2a2a2a; color: #fff; }
+body.dark-mode #webviewContainer { background: #1a1a1a; }
+body.dark-mode .frame-fallback { background: #1a1a1a; color: #ddd; }
+body.dark-mode .frame-fallback p { color: #aaa; }
+body.dark-mode .frame-fallback a { border-color: #8ab4f8; color: #8ab4f8; }
+body.dark-mode .frame-fallback a:hover { background: #23314a; }
+
+/* ---------- Extensions Manager Panel ---------- */
+#extensionsPanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 420px;
+  max-width: 90vw;
+  height: 100%;
+  background: #ffffff;
+  color: #1f1f1f;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.25);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #e0e0e0;
+}
+#extensionsPanel.hidden { display: none; }
+
+.ext-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+}
+.ext-panel-header h2 { font-size: 18px; font-weight: 600; }
+.ext-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #555;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.ext-close:hover { background: #eee; }
+
+.ext-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.ext-panel-actions button {
+  background: #f1f1f1;
+  border: 1px solid #ddd;
+  color: #333;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ext-panel-actions button:hover { background: #e4e4e4; }
+
+#extList { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.ext-loading, .ext-empty { color: #777; font-size: 13px; padding: 12px 4px; }
+
+.ext-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.ext-row.enabled .ext-name { color: #1a1a1a; }
+.ext-row:not(.enabled) .ext-name { color: #999; }
+.ext-row:not(.enabled) .ext-desc { opacity: 0.6; }
+.ext-info { flex: 1; min-width: 0; }
+.ext-name {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ext-version {
+  font-size: 11px;
+  font-weight: 400;
+  color: #888;
+  background: #f0f0f0;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.ext-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #1a73e8;
+  background: #e8f0fe;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.ext-kind {
+  font-size: 10px;
+  font-weight: 500;
+  color: #5f6368;
+  background: #e8eaed;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.ext-desc { font-size: 12px; color: #555; margin-top: 3px; word-break: break-word; }
+.ext-error { font-size: 12px; color: #c0392b; margin-top: 4px; }
+.ext-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.ext-remove-btn {
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #c0392b;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ext-remove-btn:hover { background: #fdecea; }
+
+/* Toggle switch */
+.ext-switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+.ext-switch input { opacity: 0; width: 0; height: 0; }
+.ext-slider {
+  position: absolute; cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #ccc; border-radius: 22px; transition: 0.2s;
+}
+.ext-slider::before {
+  content: ""; position: absolute;
+  height: 16px; width: 16px; left: 3px; bottom: 3px;
+  background: #fff; border-radius: 50%; transition: 0.2s;
+}
+.ext-switch input:checked + .ext-slider { background: #1a73e8; }
+.ext-switch input:checked + .ext-slider::before { transform: translateX(18px); }
+.ext-switch input:disabled + .ext-slider { opacity: 0.6; cursor: default; }
+
+.ext-hint { font-size: 11px; color: #999; padding: 10px 16px 14px; border-top: 1px solid #f0f0f0; }
+
+/* ---------- Dark mode for extensions panel ---------- */
+body.dark-mode #extensionsPanel { background: #1e1e1e; color: #e8e8e8; border-left: 1px solid #333; }
+body.dark-mode .ext-panel-header { border-bottom: 1px solid #333; }
+body.dark-mode .ext-close { color: #bbb; }
+body.dark-mode .ext-close:hover { background: #333; }
+body.dark-mode .ext-panel-actions button { background: #2a2a2a; border-color: #444; color: #ddd; }
+body.dark-mode .ext-panel-actions button:hover { background: #3a3a3a; }
+body.dark-mode .ext-row { border-bottom: 1px solid #2a2a2a; }
+body.dark-mode .ext-row.enabled .ext-name { color: #f0f0f0; }
+body.dark-mode .ext-version { background: #333; color: #aaa; }
+body.dark-mode .ext-badge { background: #23314a; color: #8ab4f8; }
+body.dark-mode .ext-kind { background: #333; color: #aaa; }
+body.dark-mode .ext-desc { color: #aaa; }
+body.dark-mode .ext-remove-btn { background: #2a2a2a; border-color: #444; }
+body.dark-mode .ext-remove-btn:hover { background: #3a2a2a; }
+body.dark-mode .ext-slider { background: #555; }
+body.dark-mode .ext-hint { color: #777; border-top: 1px solid #333; }
+
+/* ---------- Page Info popup ---------- */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 2000;
+  display: none;
+}
+.popup-overlay.active { display: block; }
+.popup-card {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  color: #1f1f1f;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  padding: 24px;
+  width: 440px;
+  max-width: 90vw;
+  z-index: 2001;
+}
+.popup-card h2 { font-size: 18px; margin-bottom: 16px; }
+.popup-card .pi-field { margin-bottom: 12px; }
+.popup-card .pi-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.popup-card .pi-value { font-size: 14px; color: #333; word-break: break-word; }
+.popup-card .pi-close {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; font-size: 18px; cursor: pointer; color: #888;
+}
+body.dark-mode .popup-card { background: #1e1e1e; color: #e8e8e8; }
+body.dark-mode .popup-card .pi-value { color: #ddd; }
+
+/* ---------- FED-GRAM popup ---------- */
+.fedgram-card { width: 520px; }
+.fedgram-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.fedgram-input-row input {
+  flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px;
+  font-size: 14px; background: #fff; color: #333;
+}
+.fedgram-input-row button {
+  padding: 8px 16px; border: none; border-radius: 6px;
+  background: #1a73e8; color: #fff; font-size: 14px; cursor: pointer;
+}
+.fedgram-input-row button:hover { background: #1557b0; }
+.fedgram-input-row button:disabled { background: #999; cursor: default; }
+.fedgram-images { display: flex; flex-wrap: wrap; gap: 12px; max-height: 320px; overflow-y: auto; }
+.fedgram-img-item { width: 140px; text-align: center; }
+.fedgram-img-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+.fedgram-img-item button {
+  margin-top: 6px; padding: 4px 12px; border: 1px solid #ddd; border-radius: 6px;
+  background: #f5f5f5; color: #333; font-size: 12px; cursor: pointer;
+}
+.fedgram-img-item button:hover { background: #e8f0fe; color: #1a73e8; }
+.fedgram-status { font-size: 13px; color: #666; margin: 8px 0; min-height: 18px; }
+.fedgram-status.error { color: #c0392b; }
+.fedgram-status.success { color: #1e8e3e; }
+body.dark-mode .fedgram-input-row input { background: #2a2a2a; color: #eee; border-color: #444; }
+body.dark-mode .fedgram-img-item img { border-color: #333; }
+body.dark-mode .fedgram-img-item button { background: #2a2a2a; color: #ccc; border-color: #444; }
