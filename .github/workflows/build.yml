@@ -24,9 +24,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows is the primary target (matches your existing setup).
-        # macOS and Linux are included so you get all three in one workflow.
-        os: [ windows-latest, macos-latest, ubuntu-latest ]
+        include:
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+          - os: ubuntu-24.04
+            platform: linux
 
     steps:
       - name: Checkout repository
@@ -35,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
@@ -58,35 +62,30 @@ jobs:
               ok=0
               continue
             fi
+            
+            # Use node to quickly check if JSON is valid without external jq dependency
             if ! node -e "JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8'))" 2>/dev/null; then
               echo "::error::Invalid JSON in ${dir}manifest.json"
               ok=0
             else
-              name=$(node -e "console.log(JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8')).name || 'unknown')")
-              ver=$(node -e "console.log(JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8')).version || '0')")
+              name=$(node -e "const m = JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8')); console.log(m.name || 'unknown')")
+              ver=$(node -e "const m = JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8')); console.log(m.version || '0')")
               echo "OK: $name v$ver ($dir)"
             fi
           done
           [ "$ok" = "1" ] || exit 1
 
       # Linux needs a few extra GUI libs for Electron to run during packaging.
+      # Added libasound2t64 to accommodate modern Ubuntu 24.04 changes.
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libnotify-dev libnss3 libxss1 libxtst6 xauth libavcodec-extra libgbm1 libasound2
+          sudo apt-get install -y libgtk-3-dev libnotify-dev libnss3 libxss1 libxtst6 xauth libavcodec-extra libgbm1 libasound2t64
 
-      - name: Build Windows portable EXE
-        if: runner.os == 'Windows'
-        run: npm run dist -- --win --publish never
-
-      - name: Build macOS package
-        if: runner.os == 'macOS'
-        run: npm run dist -- --mac --publish never
-
-      - name: Build Linux package
-        if: runner.os == 'Linux'
-        run: npm run dist -- --linux --publish never
+      # Clean, dynamic multi-platform build step
+      - name: Build Electron application
+        run: npm run dist -- --${{ matrix.platform }} --publish never
 
       # Upload everything electron-builder produced as a workflow artifact.
       - name: Upload build artifacts
@@ -116,16 +115,15 @@ jobs:
       contents: write   # required to create the release
 
     steps:
+      # Download all artifacts automatically merged into one directory
       - name: Download all build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
-          path: artifacts
+          path: release
+          merge-multiple: true
 
-      - name: Flatten artifacts into a single folder
-        run: |
-          mkdir -p release
-          find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.snap' -o -name 'latest*.yml' \) -exec cp {} release/ \;
-          ls -la release
+      - name: List downloaded files
+        run: ls -la release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
