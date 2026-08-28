@@ -1,3 +1,5 @@
+<img width="1664" height="928" alt="1787690128" src="https://github.com/user-attachments/assets/ad7ef8eb-9709-4ffa-8f1e-9da1f39de0f3" />
+
 # Surf FED — Tauri Edition (v2.0.0)
 
 A native rewrite of the **Surf FED** web browser, migrated from Electron to
