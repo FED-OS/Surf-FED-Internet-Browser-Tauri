@@ -1,0 +1,137 @@
+name: Build EXE
+
+# Builds the Surf FED Electron browser into a portable Windows EXE
+# (and optional macOS / Linux packages) using electron-builder.
+#
+# The built-in extensions under extensions/builtin/ are bundled into the
+# app automatically because they are listed in package.json -> build.files.
+#
+# Triggers:
+#   - push to main          -> build + upload artifact (no release)
+#   - manual run            -> build + upload artifact (no release)
+#   - pushing a v* tag      -> build + publish a GitHub Release with the EXE
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows is the primary target (matches your existing setup).
+        # macOS and Linux are included so you get all three in one workflow.
+        os: [ windows-latest, macos-latest, ubuntu-latest ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Sanity check: make sure every built-in extension has a valid manifest
+      # before we package, so a broken extension never ships inside the EXE.
+      - name: Validate built-in extensions
+        shell: bash
+        run: |
+          set -e
+          if [ ! -d extensions/builtin ]; then
+            echo "No builtin extensions folder found."
+            exit 0
+          fi
+          ok=1
+          for dir in extensions/builtin/*/; do
+            if [ ! -f "${dir}manifest.json" ]; then
+              echo "::error::Missing manifest.json in $dir"
+              ok=0
+              continue
+            fi
+            if ! node -e "JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8'))" 2>/dev/null; then
+              echo "::error::Invalid JSON in ${dir}manifest.json"
+              ok=0
+            else
+              name=$(node -e "console.log(JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8')).name || 'unknown')")
+              ver=$(node -e "console.log(JSON.parse(require('fs').readFileSync('${dir}manifest.json','utf8')).version || '0')")
+              echo "OK: $name v$ver ($dir)"
+            fi
+          done
+          [ "$ok" = "1" ] || exit 1
+
+      # Linux needs a few extra GUI libs for Electron to run during packaging.
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libnotify-dev libnss3 libxss1 libxtst6 xauth libavcodec-extra libgbm1 libasound2
+
+      - name: Build Windows portable EXE
+        if: runner.os == 'Windows'
+        run: npm run dist -- --win --publish never
+
+      - name: Build macOS package
+        if: runner.os == 'macOS'
+        run: npm run dist -- --mac --publish never
+
+      - name: Build Linux package
+        if: runner.os == 'Linux'
+        run: npm run dist -- --linux --publish never
+
+      # Upload everything electron-builder produced as a workflow artifact.
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Surf-FED-${{ runner.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.snap
+            dist/latest*.yml
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # -----------------------------------------------------------------------
+  # Release job: only runs when a v* tag is pushed. Packages the Windows EXE
+  # (and other platform builds) into a published GitHub Release.
+  # -----------------------------------------------------------------------
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to create the release
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts into a single folder
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.snap' -o -name 'latest*.yml' \) -exec cp {} release/ \;
+          ls -la release
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Surf FED ${{ github.ref_name }}
+          generate_release_notes: true
+          files: release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
