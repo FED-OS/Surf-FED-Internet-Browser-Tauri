@@ -32,8 +32,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22.12.0"
           cache: npm
+
+      - name: Show Node.js and npm versions
+        run: |
+          node --version
+          npm --version
 
       - name: Install dependencies
         run: npm ci
@@ -94,28 +99,44 @@ jobs:
 
       - name: Verify Electron Builder
         shell: bash
-        run: npx electron-builder --version
+        run: |
+          set -e
+
+          if [ ! -x "node_modules/.bin/electron-builder" ]; then
+            echo "::error::electron-builder is not installed in node_modules."
+            echo "Add electron-builder to devDependencies and regenerate package-lock.json."
+            exit 1
+          fi
+
+          node_modules/.bin/electron-builder --version
 
       - name: Build Windows portable EXE
         if: runner.os == 'Windows'
-        run: npx electron-builder --win portable --publish never
+        run: npm exec -- electron-builder --win portable --publish never
 
       - name: Build macOS package
         if: runner.os == 'macOS'
-        run: npx electron-builder --mac dmg zip --publish never
+        run: npm exec -- electron-builder --mac dmg zip --publish never
 
       - name: Build Linux packages
         if: runner.os == 'Linux'
-        run: npx electron-builder --linux AppImage deb --publish never
+        run: npm exec -- electron-builder --linux AppImage deb --publish never
 
       - name: Show generated files
         shell: bash
         run: |
-          if [ -d "dist" ]; then
-            echo "Generated files:"
-            find dist -maxdepth 1 -type f -print
-          else
-            echo "No dist directory was generated."
+          set -e
+
+          if [ ! -d "dist" ]; then
+            echo "::error::No dist directory was generated."
+            exit 1
+          fi
+
+          echo "Generated files:"
+          find dist -maxdepth 1 -type f -print
+
+          if [ -z "$(find dist -maxdepth 1 -type f -print -quit)" ]; then
+            echo "::error::The dist directory is empty."
             exit 1
           fi
 
