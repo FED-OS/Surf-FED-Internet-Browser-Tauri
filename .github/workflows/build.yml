@@ -6,7 +6,11 @@ on:
       - main
     tags:
       - "v*"
+
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -88,17 +92,32 @@ jobs:
             libgbm1 \
             libasound2t64
 
+      - name: Verify Electron Builder
+        shell: bash
+        run: npx electron-builder --version
+
       - name: Build Windows portable EXE
         if: runner.os == 'Windows'
-        run: npm run dist -- --win portable --publish never
+        run: npx electron-builder --win portable --publish never
 
       - name: Build macOS package
         if: runner.os == 'macOS'
-        run: npm run dist -- --mac --publish never
+        run: npx electron-builder --mac dmg zip --publish never
 
-      - name: Build Linux package
+      - name: Build Linux packages
         if: runner.os == 'Linux'
-        run: npm run dist -- --linux --publish never
+        run: npx electron-builder --linux AppImage deb --publish never
+
+      - name: Show generated files
+        shell: bash
+        run: |
+          if [ -d "dist" ]; then
+            echo "Generated files:"
+            find dist -maxdepth 1 -type f -print
+          else
+            echo "No dist directory was generated."
+            exit 1
+          fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -112,12 +131,13 @@ jobs:
             dist/*.deb
             dist/*.snap
             dist/latest*.yml
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 30
 
   release:
     name: Publish GitHub Release
     needs: build
+
     if: startsWith(github.ref, 'refs/tags/v')
 
     runs-on: ubuntu-latest
@@ -150,7 +170,13 @@ jobs:
             \) \
             -exec cp {} release/ \;
 
+          echo "Release files:"
           ls -la release
+
+          if [ -z "$(find release -type f -print -quit)" ]; then
+            echo "::error::No release files were found."
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
