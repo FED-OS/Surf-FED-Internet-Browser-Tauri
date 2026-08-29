@@ -1,4 +1,4 @@
-name: Build Surf FED Electron App
+name: Build Surf FED Tauri App
 
 on:
   push:
@@ -35,12 +35,47 @@ jobs:
           node-version: "22.12.0"
           cache: npm
 
-      - name: Show Node.js and npm versions
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: |
+            x86_64-pc-windows-msvc
+            x86_64-apple-darwin
+            x86_64-unknown-linux-gnu
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -e
+
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libgtk-3-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev
+
+      - name: Show tool versions
+        shell: bash
         run: |
           node --version
           npm --version
+          rustc --version
+          cargo --version
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
 
       - name: Validate built-in extensions
@@ -78,80 +113,65 @@ jobs:
             exit 1
           fi
 
-      - name: Install Linux build dependencies
-        if: runner.os == 'Linux'
+      - name: Install Tauri CLI
+        run: npm install --save-dev @tauri-apps/cli
+
+      - name: Verify Tauri CLI
         shell: bash
-        run: |
-          set -e
+        run: npx tauri --version
 
-          sudo apt-get update
-
-          sudo apt-get install -y \
-            libgtk-3-dev \
-            libnotify-dev \
-            libnss3 \
-            libxss1 \
-            libxtst6 \
-            xauth \
-            libavcodec-extra \
-            libgbm1 \
-            libasound2t64
-
-      - name: Verify Electron Builder
-        shell: bash
-        run: |
-          set -e
-
-          if [ ! -x "node_modules/.bin/electron-builder" ]; then
-            echo "::error::electron-builder is not installed in node_modules."
-            echo "Add electron-builder to devDependencies and regenerate package-lock.json."
-            exit 1
-          fi
-
-          node_modules/.bin/electron-builder --version
-
-      - name: Build Windows portable EXE
-        if: runner.os == 'Windows'
-        run: npm exec -- electron-builder --win portable --publish never
-
-      - name: Build macOS package
-        if: runner.os == 'macOS'
-        run: npm exec -- electron-builder --mac dmg zip --publish never
-
-      - name: Build Linux packages
-        if: runner.os == 'Linux'
-        run: npm exec -- electron-builder --linux AppImage deb --publish never
+      - name: Build Tauri application
+        run: npm run tauri build
 
       - name: Show generated files
         shell: bash
         run: |
           set -e
 
-          if [ ! -d "dist" ]; then
-            echo "::error::No dist directory was generated."
+          if [ ! -d "src-tauri/target/release/bundle" ]; then
+            echo "::error::No Tauri bundle directory was generated."
             exit 1
           fi
 
           echo "Generated files:"
-          find dist -maxdepth 1 -type f -print
+          find src-tauri/target/release/bundle -type f -print
 
-          if [ -z "$(find dist -maxdepth 1 -type f -print -quit)" ]; then
-            echo "::error::The dist directory is empty."
+          if [ -z "$(find src-tauri/target/release/bundle -type f -print -quit)" ]; then
+            echo "::error::The Tauri bundle directory is empty."
             exit 1
           fi
 
-      - name: Upload build artifacts
+      - name: Upload Windows artifacts
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: Surf-FED-${{ runner.os }}
+          name: Surf-FED-Windows
           path: |
-            dist/*.exe
-            dist/*.dmg
-            dist/*.zip
-            dist/*.AppImage
-            dist/*.deb
-            dist/*.snap
-            dist/latest*.yml
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload macOS artifacts
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Surf-FED-macOS
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/macos/*.app.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Linux artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Surf-FED-Linux
+          path: |
+            src-tauri/target/release/bundle/appimage/*.AppImage
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/rpm/*.rpm
           if-no-files-found: error
           retention-days: 30
 
@@ -181,13 +201,13 @@ jobs:
 
           find artifacts -type f \
             \( \
-              -name "*.exe" \
+              -name "*.msi" \
+              -o -name "*.exe" \
               -o -name "*.dmg" \
-              -o -name "*.zip" \
+              -o -name "*.app.tar.gz" \
               -o -name "*.AppImage" \
               -o -name "*.deb" \
-              -o -name "*.snap" \
-              -o -name "latest*.yml" \
+              -o -name "*.rpm" \
             \) \
             -exec cp {} release/ \;
 
